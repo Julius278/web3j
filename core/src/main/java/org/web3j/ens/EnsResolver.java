@@ -20,8 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -29,6 +27,8 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import org.web3j.abi.DefaultFunctionEncoder;
 import org.web3j.abi.DefaultFunctionReturnDecoder;
@@ -299,7 +299,7 @@ public class EnsResolver {
             Request request;
             try {
                 request = buildRequest(url, sender, data);
-            } catch (JsonProcessingException | EnsResolutionException e) {
+            } catch (JacksonException | EnsResolutionException e) {
                 log.error(e.getMessage(), e);
                 break;
             }
@@ -343,8 +343,7 @@ public class EnsResolver {
         return null;
     }
 
-    protected Request buildRequest(String url, String sender, String data)
-            throws JsonProcessingException {
+    protected Request buildRequest(String url, String sender, String data) throws JacksonException {
         if (sender == null || !WalletUtils.isValidAddress(sender)) {
             throw new EnsResolutionException("Sender address is null or not valid");
         }
