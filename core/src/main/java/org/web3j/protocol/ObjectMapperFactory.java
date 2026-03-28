@@ -12,15 +12,16 @@
  */
 package org.web3j.protocol;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.databind.BeanDescription;
+import tools.jackson.databind.DeserializationConfig;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.deser.ValueDeserializerModifier;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.deserializer.RawResponseDeserializer;
@@ -28,11 +29,7 @@ import org.web3j.protocol.deserializer.RawResponseDeserializer;
 /** Factory for managing our ObjectMapper instances. */
 public class ObjectMapperFactory {
 
-    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
-
-    static {
-        configureObjectMapper(DEFAULT_OBJECT_MAPPER, false);
-    }
+    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = buildObjectMapper(false);
 
     public static ObjectMapper getObjectMapper() {
         return getObjectMapper(false);
@@ -43,38 +40,41 @@ public class ObjectMapperFactory {
             return DEFAULT_OBJECT_MAPPER;
         }
 
-        return configureObjectMapper(new ObjectMapper(), true);
+        return buildObjectMapper(true);
     }
 
     public static ObjectReader getObjectReader() {
         return DEFAULT_OBJECT_MAPPER.reader();
     }
 
-    private static ObjectMapper configureObjectMapper(
-            ObjectMapper objectMapper, boolean shouldIncludeRawResponses) {
+    private static ObjectMapper buildObjectMapper(boolean shouldIncludeRawResponses) {
+        JsonMapper.Builder builder =
+                JsonMapper.builder()
+                        .enable(JsonReadFeature.ALLOW_UNQUOTED_PROPERTY_NAMES)
+                        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                        .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
+
         if (shouldIncludeRawResponses) {
             SimpleModule module = new SimpleModule();
             module.setDeserializerModifier(
-                    new BeanDeserializerModifier() {
+                    new ValueDeserializerModifier() {
                         @Override
-                        public JsonDeserializer<?> modifyDeserializer(
+                        public ValueDeserializer<?> modifyDeserializer(
                                 DeserializationConfig config,
-                                BeanDescription beanDesc,
-                                JsonDeserializer<?> deserializer) {
+                                BeanDescription.Supplier beanDesc,
+                                ValueDeserializer<?> deserializer) {
                             if (Response.class.isAssignableFrom(beanDesc.getBeanClass())) {
-                                return new RawResponseDeserializer(deserializer);
+                                return new RawResponseDeserializer(
+                                        (ValueDeserializer<?>) deserializer);
                             }
 
                             return deserializer;
                         }
                     });
 
-            objectMapper.registerModule(module);
+            builder.addModule(module);
         }
 
-        objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        return objectMapper;
+        return builder.build();
     }
 }

@@ -28,16 +28,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.subjects.BehaviorSubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.protocol.Web3jService;
@@ -193,7 +193,7 @@ public class WebSocketService implements Web3jService {
         requestForId.put(requestId, new WebSocketRequest<>(result, responseType));
         try {
             sendRequest(request, requestId);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             closeRequest(requestId, e);
         }
 
@@ -231,22 +231,21 @@ public class WebSocketService implements Web3jService {
 
         try {
             sendBatchRequest(requests, requestId);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             closeRequest(requestId, e);
         }
 
         return result;
     }
 
-    private void sendRequest(Request request, long requestId) throws JsonProcessingException {
+    private void sendRequest(Request request, long requestId) throws JacksonException {
         String payload = objectMapper.writeValueAsString(request);
         log.debug("Sending request: {}", payload);
         webSocketClient.send(payload);
         setRequestTimeout(requestId);
     }
 
-    private void sendBatchRequest(BatchRequest request, long requestId)
-            throws JsonProcessingException {
+    private void sendBatchRequest(BatchRequest request, long requestId) throws JacksonException {
         String payload = objectMapper.writeValueAsString(request.getRequests());
         log.debug("Sending batch request: {}", payload);
         webSocketClient.send(payload);
@@ -419,7 +418,7 @@ public class WebSocketService implements Web3jService {
     private JsonNode parseToTree(String replyStr) throws IOException {
         try {
             return objectMapper.readTree(replyStr);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new IOException("Failed to parse incoming WebSocket message", e);
         }
     }
