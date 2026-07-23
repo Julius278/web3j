@@ -298,8 +298,6 @@ public class SolidityFunctionWrapperGeneratorTest extends TempFileProvider {
                                         "java",
                                         inputFileName + ".java"),
                                 File.separator));
-        System.out.println("EXPECTED: " + fileExpected.getAbsolutePath());
-        System.out.println("ACTUAL:   " + fileActual.getAbsolutePath());
         assertEquals(
                 new String(Files.readAllBytes(fileExpected.toPath())).replaceAll("(\r\n|\n)", ""),
                 new String(Files.readAllBytes(fileActual.toPath())).replaceAll("(\r\n|\n)", ""));
