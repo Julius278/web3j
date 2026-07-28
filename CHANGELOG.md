@@ -7,6 +7,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Bug Fixes
 
+- Fix dynamic array decoding in generated wrappers for struct types [#2272](https://github.com/LFDT-web3j/web3j/pull/2272)
 - Fix incorrect casting for array types in generated contract wrappers [#2274](https://github.com/LFDT-web3j/web3j/pull/2274)
 - Fix NullPointerException when deriving child keys from public-only Bip32ECKeyPair [#2284](https://github.com/LFDT-web3j/web3j/pull/2284)
 - Fix Utf8String encoding + dynamic array for non-ASCII characters [#2289](https://github.com/LFDT-web3j/web3j/pull/2289)

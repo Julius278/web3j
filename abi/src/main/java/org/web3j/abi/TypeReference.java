@@ -60,6 +60,11 @@ public abstract class TypeReference<T extends org.web3j.abi.datatypes.Type>
         this.indexed = indexed;
     }
 
+    protected TypeReference(Type type, boolean indexed) {
+        this.type = type;
+        this.indexed = indexed;
+    }
+
     /**
      * getSubTypeReference() is used by instantiateType to see what TypeReference is wrapped by this
      * one. eg calling getSubTypeReference() on a TypeReference to
