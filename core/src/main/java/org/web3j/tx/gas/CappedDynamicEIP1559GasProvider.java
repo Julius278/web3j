@@ -17,7 +17,13 @@ import java.math.BigInteger;
 
 import org.web3j.protocol.Web3j;
 
+/**
+ * {@link DynamicEIP1559GasProvider} that enforces a configurable upper limit (cap) on the EIP-1559
+ * gas fees. This protects against paying excessive fees during gas price spikes on public networks.
+ */
 public class CappedDynamicEIP1559GasProvider extends DynamicEIP1559GasProvider {
+
+    /** Upper limit (in wei) applied to the calculated gas fees. */
     private final BigInteger maxFeePerGas;
 
     CappedDynamicEIP1559GasProvider(
@@ -33,11 +39,22 @@ public class CappedDynamicEIP1559GasProvider extends DynamicEIP1559GasProvider {
         this.maxFeePerGas = maxFeePerGas;
     }
 
+    /**
+     * Returns the dynamically calculated max fee per gas, capped at the configured upper limit.
+     *
+     * @return the smaller of the calculated fee and the configured maximum
+     */
     @Override
     public BigInteger getMaxFeePerGas() {
         return super.getMaxFeePerGas().min(maxFeePerGas);
     }
 
+    /**
+     * Returns the dynamically calculated max priority fee per gas, capped at the configured upper
+     * limit so it never exceeds the overall max fee per gas.
+     *
+     * @return the smaller of the calculated priority fee and the configured maximum
+     */
     @Override
     public BigInteger getMaxPriorityFeePerGas() {
         return super.getMaxPriorityFeePerGas().min(maxFeePerGas);
