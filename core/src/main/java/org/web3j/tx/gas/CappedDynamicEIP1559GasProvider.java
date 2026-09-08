@@ -14,6 +14,7 @@ package org.web3j.tx.gas;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Objects;
 
 import org.web3j.protocol.Web3j;
 
@@ -26,13 +27,26 @@ public class CappedDynamicEIP1559GasProvider extends DynamicEIP1559GasProvider {
     /** Upper limit (in wei) applied to the calculated gas fees. */
     private final BigInteger maxFeePerGas;
 
-    CappedDynamicEIP1559GasProvider(
+    public CappedDynamicEIP1559GasProvider(Web3j web3j, long chainId, BigInteger maxFeePerGas) {
+        this(web3j, chainId, Priority.NORMAL, BigDecimal.ONE, maxFeePerGas);
+    }
+
+    public CappedDynamicEIP1559GasProvider(
+            Web3j web3j,
+            long chainId,
+            PriorityGasProvider.Priority priority,
+            BigInteger maxFeePerGas) {
+        this(web3j, chainId, priority, BigDecimal.ONE, maxFeePerGas);
+    }
+
+    public CappedDynamicEIP1559GasProvider(
             Web3j web3j,
             long chainId,
             PriorityGasProvider.Priority priority,
             BigDecimal customMultiplier,
             BigInteger maxFeePerGas) {
         super(web3j, chainId, priority, customMultiplier);
+        Objects.requireNonNull(maxFeePerGas, "maxFeePerGas must not be null");
         if (maxFeePerGas.signum() <= 0) {
             throw new IllegalArgumentException("maxFeePerGas must be positive");
         }
@@ -58,5 +72,10 @@ public class CappedDynamicEIP1559GasProvider extends DynamicEIP1559GasProvider {
     @Override
     public BigInteger getMaxPriorityFeePerGas() {
         return super.getMaxPriorityFeePerGas().min(maxFeePerGas);
+    }
+
+    @Override
+    public BigInteger getGasPrice() {
+        return super.getGasPrice().min(maxFeePerGas);
     }
 }
